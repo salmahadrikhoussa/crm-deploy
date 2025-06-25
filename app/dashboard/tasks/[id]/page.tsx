@@ -1,6 +1,9 @@
 import React from "react";
 
-// 👇 aucun typage personnalisé ici, tout est inline comme le veut Next.js
+// ✅ Step 2: Add this line at the top of the file
+export const dynamic = "force-dynamic";
+
+// ✅ Step 3: Make sure this function is correctly typed
 export default function TaskDetailsPage({
   params,
 }: {
