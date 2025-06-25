@@ -1,13 +1,15 @@
-import React from "react";
+import { FC } from "react";
 
-type Props = {
+// ✅ Ceci est requis par Next.js pour comprendre que c'est une page dynamique
+export const dynamicParams = true;
+
+interface TaskDetailsPageProps {
   params: {
     id: string;
   };
-};
+}
 
-// ✅ il faut rendre la fonction `async`, même si tu ne fais pas d'appel réseau
-const TaskDetailsPage = async ({ params }: Props) => {
+const TaskDetailsPage: FC<TaskDetailsPageProps> = ({ params }) => {
   return (
     <div>
       <h1>Détails de la tâche</h1>
