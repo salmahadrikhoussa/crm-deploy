@@ -30,7 +30,7 @@ export async function GET(
   }
 }
 
-// PATCH user
+// PATCH user by ID
 export async function PATCH(
   req: NextRequest,
   { params }: { params: { id: string } }
@@ -57,7 +57,7 @@ export async function PATCH(
   }
 }
 
-// DELETE user
+// DELETE user by ID
 export async function DELETE(
   req: NextRequest,
   { params }: { params: { id: string } }
