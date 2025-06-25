@@ -6,7 +6,7 @@ type Props = {
   };
 };
 
-// ← ajout de "async"
+// ✅ il faut rendre la fonction `async`, même si tu ne fais pas d'appel réseau
 const TaskDetailsPage = async ({ params }: Props) => {
   return (
     <div>
