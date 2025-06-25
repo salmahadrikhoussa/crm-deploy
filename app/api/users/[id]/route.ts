@@ -3,19 +3,17 @@ import type { NextRequest } from "next/server";
 import clientPromise from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 
-type Context = {
-  params: {
-    id: string;
-  };
-};
-
-export async function GET(req: NextRequest, context: Context) {
-  const id = context.params.id;
-
+// GET user by ID
+export async function GET(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
   try {
     const client = await clientPromise;
     const db = client.db("suzali_crm");
-    const user = await db.collection("users").findOne({ _id: new ObjectId(id) });
+    const user = await db.collection("users").findOne({
+      _id: new ObjectId(params.id),
+    });
 
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
@@ -28,15 +26,17 @@ export async function GET(req: NextRequest, context: Context) {
   }
 }
 
-export async function PATCH(req: NextRequest, context: Context) {
-  const id = context.params.id;
-
+// PATCH user
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
   try {
     const updates = await req.json();
     const client = await clientPromise;
     const db = client.db("suzali_crm");
     await db.collection("users").updateOne(
-      { _id: new ObjectId(id) },
+      { _id: new ObjectId(params.id) },
       { $set: updates }
     );
 
@@ -47,13 +47,17 @@ export async function PATCH(req: NextRequest, context: Context) {
   }
 }
 
-export async function DELETE(req: NextRequest, context: Context) {
-  const id = context.params.id;
-
+// DELETE user
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
   try {
     const client = await clientPromise;
     const db = client.db("suzali_crm");
-    await db.collection("users").deleteOne({ _id: new ObjectId(id) });
+    await db.collection("users").deleteOne({
+      _id: new ObjectId(params.id),
+    });
 
     return NextResponse.json({ ok: true });
   } catch (error) {
