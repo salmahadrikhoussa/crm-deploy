@@ -3,11 +3,13 @@ import type { NextRequest } from "next/server";
 import clientPromise from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 
-// GET user by ID
-export async function GET(
-  req: NextRequest,
-  context: { params: { id: string } }
-) {
+type Context = {
+  params: {
+    id: string;
+  };
+};
+
+export async function GET(req: NextRequest, context: Context) {
   const id = context.params.id;
 
   try {
@@ -26,11 +28,7 @@ export async function GET(
   }
 }
 
-// PATCH user
-export async function PATCH(
-  req: NextRequest,
-  context: { params: { id: string } }
-) {
+export async function PATCH(req: NextRequest, context: Context) {
   const id = context.params.id;
 
   try {
@@ -49,11 +47,7 @@ export async function PATCH(
   }
 }
 
-// DELETE user
-export async function DELETE(
-  req: NextRequest,
-  context: { params: { id: string } }
-) {
+export async function DELETE(req: NextRequest, context: Context) {
   const id = context.params.id;
 
   try {
