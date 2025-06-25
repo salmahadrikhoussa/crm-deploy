@@ -3,7 +3,6 @@ import type { NextRequest } from "next/server";
 import clientPromise from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 
-// GET user by ID
 export async function GET(
   req: NextRequest,
   { params }: { params: { id: string } }
@@ -26,7 +25,6 @@ export async function GET(
   }
 }
 
-// PATCH user
 export async function PATCH(
   req: NextRequest,
   { params }: { params: { id: string } }
@@ -35,6 +33,7 @@ export async function PATCH(
     const updates = await req.json();
     const client = await clientPromise;
     const db = client.db("suzali_crm");
+
     await db.collection("users").updateOne(
       { _id: new ObjectId(params.id) },
       { $set: updates }
@@ -47,7 +46,6 @@ export async function PATCH(
   }
 }
 
-// DELETE user
 export async function DELETE(
   req: NextRequest,
   { params }: { params: { id: string } }
@@ -55,6 +53,7 @@ export async function DELETE(
   try {
     const client = await clientPromise;
     const db = client.db("suzali_crm");
+
     await db.collection("users").deleteOne({
       _id: new ObjectId(params.id),
     });
