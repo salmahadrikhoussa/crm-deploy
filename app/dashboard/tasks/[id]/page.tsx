@@ -1,10 +1,6 @@
 import React from "react";
 
-interface Props {
-  params: { id: string };
-}
-
-const TaskDetailsPage = ({ params }: Props) => {
+const TaskDetailsPage = async ({ params }: { params: { id: string } }) => {
   return (
     <div>
       <h1>Détails de la tâche</h1>
