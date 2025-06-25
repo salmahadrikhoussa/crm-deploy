@@ -1,17 +1,19 @@
-import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 
+// GET user by ID
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
+  const { id } = context.params;
+
   try {
     const client = await clientPromise;
     const db = client.db("suzali_crm");
     const user = await db.collection("users").findOne({
-      _id: new ObjectId(params.id),
+      _id: new ObjectId(id),
     });
 
     if (!user) {
@@ -25,17 +27,20 @@ export async function GET(
   }
 }
 
+// PATCH user by ID
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
+  const { id } = context.params;
+
   try {
     const updates = await req.json();
     const client = await clientPromise;
     const db = client.db("suzali_crm");
 
     await db.collection("users").updateOne(
-      { _id: new ObjectId(params.id) },
+      { _id: new ObjectId(id) },
       { $set: updates }
     );
 
@@ -46,16 +51,19 @@ export async function PATCH(
   }
 }
 
+// DELETE user by ID
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
+  const { id } = context.params;
+
   try {
     const client = await clientPromise;
     const db = client.db("suzali_crm");
 
     await db.collection("users").deleteOne({
-      _id: new ObjectId(params.id),
+      _id: new ObjectId(id),
     });
 
     return NextResponse.json({ ok: true });
