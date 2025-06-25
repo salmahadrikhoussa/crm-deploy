@@ -1,4 +1,3 @@
-import { Metadata } from "next";
 import React from "react";
 
 type Props = {
@@ -7,11 +6,8 @@ type Props = {
   };
 };
 
-export const metadata: Metadata = {
-  title: "Détails de la tâche",
-};
-
-const TaskDetailsPage = ({ params }: Props) => {
+// ← ajout de "async"
+const TaskDetailsPage = async ({ params }: Props) => {
   return (
     <div>
       <h1>Détails de la tâche</h1>
