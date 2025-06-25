@@ -1,30 +1,19 @@
-import { notFound } from "next/navigation";
+'use client';
+import { use } from 'react';
+import { notFound } from 'next/navigation';
 
-interface TaskDetailsPageProps {
-  params: { id: string };
-}
+export default function TaskDetail({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
 
-async function getTask(id: string) {
-  const res = await fetch(`${process.env.API_URL}/api/tasks/${id}`, {
-    cache: "no-store",
-  });
-
-  if (!res.ok) return null;
-
-  return res.json();
-}
-
-export default async function TaskDetailsPage({ params }: TaskDetailsPageProps) {
-  const task = await getTask(params.id);
-
-  if (!task) return notFound();
+  const task = use(fetch(`${process.env.API_URL}/api/tasks/${id}`, { cache: 'no-store' }).then(res => {
+    if (!res.ok) return notFound();
+    return res.json();
+  }));
 
   return (
     <div className="p-4">
-      <h1 className="text-xl font-bold mb-2">Détails de la tâche</h1>
+      <h1>Détails de {task.title}</h1>
       <p>ID : {task.id}</p>
-      <p>Titre : {task.title}</p>
-      <p>Description : {task.description}</p>
     </div>
   );
 }
