@@ -1,6 +1,7 @@
 import React from "react";
 
-export default async function TaskDetailsPage({
+// 👇 aucun typage personnalisé ici, tout est inline comme le veut Next.js
+export default function TaskDetailsPage({
   params,
 }: {
   params: { id: string };
