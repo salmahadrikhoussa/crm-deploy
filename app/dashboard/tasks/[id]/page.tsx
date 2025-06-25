@@ -1,17 +1,23 @@
-// app/dashboard/tasks/[id]/page.tsx
-
 import { notFound } from "next/navigation";
 
-export default async function TaskDetailsPage({ params }: { params: { id: string } }) {
-  const { id } = params;
+interface TaskDetailsPageProps {
+  params: { id: string };
+}
 
+async function getTask(id: string) {
   const res = await fetch(`${process.env.API_URL}/api/tasks/${id}`, {
     cache: "no-store",
   });
 
-  if (!res.ok) return notFound();
+  if (!res.ok) return null;
 
-  const task = await res.json();
+  return res.json();
+}
+
+export default async function TaskDetailsPage({ params }: TaskDetailsPageProps) {
+  const task = await getTask(params.id);
+
+  if (!task) return notFound();
 
   return (
     <div className="p-4">
