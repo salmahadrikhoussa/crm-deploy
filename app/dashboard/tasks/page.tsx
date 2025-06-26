@@ -1,10 +1,8 @@
-// app/dashboard/tasks/page.tsx
 "use client";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import NewTaskForm, { TaskInput } from "../../components/NewTaskForm";
-import { useUsers } from "@/hooks/useUsers";
 
 interface Task {
   id: string;
@@ -21,16 +19,29 @@ export default function TasksPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // filter/search state
+  // filters
   const [searchTerm, setSearchTerm] = useState("");
   const [priorityFilter, setPriorityFilter] = useState("All");
   const [statusFilter, setStatusFilter] = useState("All");
 
   useEffect(() => {
     fetch("/api/tasks")
-      .then((res) => res.json())
+      .then(async (res) => {
+        if (!res.ok) {
+          const err = await res.text();
+          console.error("Erreur backend:", err);
+          setError("Erreur lors du chargement des tâches.");
+          return [];
+        }
+        return res.json();
+      })
       .then((data: Task[]) => setTasks(data))
+      .catch((err) => {
+        console.error("Erreur inattendue:", err);
+        setError("Erreur inattendue.");
+      })
       .finally(() => setLoading(false));
   }, []);
 
@@ -39,19 +50,12 @@ export default function TasksPage() {
     setShowForm(false);
   };
 
-  if (loading) return <p>Loading tasks…</p>;
+  if (loading) return <p>Chargement des tâches…</p>;
 
-  // apply search & filters
   const displayed = tasks
-    .filter((t) =>
-      t.title.toLowerCase().includes(searchTerm.toLowerCase())
-    )
-    .filter((t) =>
-      priorityFilter === "All" ? true : t.priority === priorityFilter
-    )
-    .filter((t) =>
-      statusFilter === "All" ? true : t.status === statusFilter
-    );
+    .filter((t) => t.title.toLowerCase().includes(searchTerm.toLowerCase()))
+    .filter((t) => (priorityFilter === "All" ? true : t.priority === priorityFilter))
+    .filter((t) => (statusFilter === "All" ? true : t.status === statusFilter));
 
   return (
     <div>
@@ -65,7 +69,9 @@ export default function TasksPage() {
         </button>
       </div>
 
-      {/* Search & Filters */}
+      {error && <p className="text-red-600 mb-4">{error}</p>}
+
+      {/* Filters */}
       <div className="flex flex-wrap items-center justify-between mb-4 space-y-2">
         <div className="flex space-x-2">
           <input
@@ -78,23 +84,19 @@ export default function TasksPage() {
           <select
             value={priorityFilter}
             onChange={(e) => setPriorityFilter(e.target.value)}
-            className="border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500"
+            className="border border-gray-300 rounded-lg p-2"
           >
             {["All", "Low", "Normal", "High", "Urgent"].map((p) => (
-              <option key={p} value={p}>
-                {p}
-              </option>
+              <option key={p}>{p}</option>
             ))}
           </select>
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500"
+            className="border border-gray-300 rounded-lg p-2"
           >
             {["All", "Open", "In Progress", "Completed", "Blocked"].map((s) => (
-              <option key={s} value={s}>
-                {s}
-              </option>
+              <option key={s}>{s}</option>
             ))}
           </select>
         </div>
@@ -115,10 +117,8 @@ export default function TasksPage() {
         <table className="min-w-full bg-white rounded-lg shadow">
           <thead>
             <tr className="bg-gray-100 text-left">
-              {["Title","Project ID","Assignee","Due Date","Priority","Status","Actions"].map((h) => (
-                <th key={h} className="px-4 py-2">
-                  {h}
-                </th>
+              {["Title", "Project ID", "Assignee", "Due Date", "Priority", "Status", "Actions"].map((h) => (
+                <th key={h} className="px-4 py-2">{h}</th>
               ))}
             </tr>
           </thead>

@@ -1,7 +1,6 @@
-// components/NewProjectForm.tsx
 "use client";
 
-import { useState, FormEvent } from "react";
+import { useEffect, useState, FormEvent } from "react";
 
 export interface ProjectInput {
   name: string;
@@ -10,6 +9,17 @@ export interface ProjectInput {
   startDate: string;
   endDate: string;
   status: string;
+}
+
+interface User {
+  id: string;
+  name?: string;
+  email: string;
+}
+
+interface Client {
+  id: string;
+  name: string;
 }
 
 interface NewProjectFormProps {
@@ -26,8 +36,23 @@ export default function NewProjectForm({ onSuccess, onClose }: NewProjectFormPro
     endDate: new Date().toISOString().substring(0, 10),
     status: "Active",
   });
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [clients, setClients] = useState<Client[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
+
+  useEffect(() => {
+    fetch("/api/clients")
+      .then(res => res.json())
+      .then(setClients)
+      .catch(err => console.error("Clients error", err));
+
+    fetch("/api/users")
+      .then(res => res.json())
+      .then(setUsers)
+      .catch(err => console.error("Users error", err));
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -52,16 +77,13 @@ export default function NewProjectForm({ onSuccess, onClose }: NewProjectFormPro
       } else {
         const created = await res.json();
         onSuccess(created);
-        // now that we've succeeded, reset loading and close
         setLoading(false);
         onClose();
-        return;
       }
     } catch (err) {
       console.error(err);
       setError("An unexpected error occurred.");
     } finally {
-      // ensure we turn off loading if we fell into the error path
       setLoading(false);
     }
   };
@@ -73,67 +95,95 @@ export default function NewProjectForm({ onSuccess, onClose }: NewProjectFormPro
         className="bg-white w-full max-w-lg p-6 rounded-2xl shadow-xl space-y-4"
       >
         <h2 className="text-xl font-semibold">New Project</h2>
-
         {error && <p className="text-sm text-red-600">{error}</p>}
 
-        {[
-          { label: "Project Name", name: "name", type: "text" },
-          { label: "Client ID",     name: "clientId", type: "text" },
-          { label: "Owner (User ID)",name: "owner", type: "text" },
-        ].map((field) => (
-          <div key={field.name}>
-            <label htmlFor={field.name} className="block text-sm font-medium text-gray-700">
-              {field.label}
-            </label>
-            <input
-              id={field.name}
-              name={field.name}
-              type={field.type}
-              required
-              value={(form as any)[field.name]}
-              onChange={handleChange}
-              disabled={loading}
-              className="mt-1 block w-full border border-gray-200 rounded-lg p-2 focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-        ))}
+        {/* Project Name */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Project Name</label>
+          <input
+            name="name"
+            type="text"
+            required
+            value={form.name}
+            onChange={handleChange}
+            disabled={loading}
+            className="mt-1 block w-full border border-gray-200 rounded-lg p-2 focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
 
+        {/* Client */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Client</label>
+          <select
+            name="clientId"
+            value={form.clientId}
+            onChange={handleChange}
+            required
+            disabled={loading}
+            className="mt-1 block w-full border border-gray-200 rounded-lg p-2 focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="">Select a client</option>
+            {clients.map((client) => (
+              <option key={client.id} value={client.id}>{client.name}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* Owner */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Owner</label>
+          <select
+            name="owner"
+            value={form.owner}
+            onChange={handleChange}
+            required
+            disabled={loading}
+            className="mt-1 block w-full border border-gray-200 rounded-lg p-2 focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="">Select a user</option>
+            {users.map((user) => (
+              <option key={user.id} value={user.id}>
+                {user.name || user.email}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Dates */}
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label htmlFor="startDate" className="block text-sm font-medium text-gray-700">Start Date</label>
+            <label className="block text-sm font-medium text-gray-700">Start Date</label>
             <input
-              id="startDate"
               name="startDate"
               type="date"
               value={form.startDate}
               onChange={handleChange}
               disabled={loading}
-              className="mt-1 block w-full border border-gray-200 rounded-lg p-2 focus:ring-2 focus:ring-blue-500"
+              className="mt-1 block w-full border border-gray-200 rounded-lg p-2"
             />
           </div>
           <div>
-            <label htmlFor="endDate" className="block text-sm font-medium text-gray-700">End Date</label>
+            <label className="block text-sm font-medium text-gray-700">End Date</label>
             <input
-              id="endDate"
               name="endDate"
               type="date"
               value={form.endDate}
               onChange={handleChange}
               disabled={loading}
-              className="mt-1 block w-full border border-gray-200 rounded-lg p-2 focus:ring-2 focus:ring-blue-500"
+              className="mt-1 block w-full border border-gray-200 rounded-lg p-2"
             />
           </div>
         </div>
 
+        {/* Status */}
         <div>
-          <label htmlFor="status" className="block text-sm font-medium text-gray-700">Status</label>
+          <label className="block text-sm font-medium text-gray-700">Status</label>
           <select
-            id="status"
             name="status"
             value={form.status}
             onChange={handleChange}
             disabled={loading}
-            className="mt-1 block w-full border border-gray-200 rounded-lg p-2 focus:ring-2 focus:ring-blue-500"
+            className="mt-1 block w-full border border-gray-200 rounded-lg p-2"
           >
             {["Active", "Completed", "On Hold", "Cancelled"].map((opt) => (
               <option key={opt} value={opt}>{opt}</option>
@@ -141,6 +191,7 @@ export default function NewProjectForm({ onSuccess, onClose }: NewProjectFormPro
           </select>
         </div>
 
+        {/* Buttons */}
         <div className="flex justify-end space-x-2 pt-4">
           <button
             type="button"

@@ -59,9 +59,21 @@ export const UserSchema = z.object({
   password: z.string().min(6), 
 });
 export type UserInput = z.infer<typeof UserSchema>;
-// Add a login-specific schema
+
+// --- Login ---
 export const LoginSchema = z.object({
   email: z.string().email(),
   password: z.string().min(1),
 });
 export type LoginInput = z.infer<typeof LoginSchema>;
+
+// --- Notifications ---
+export const NotificationSchema = z.object({
+  userId: z.string().min(1),
+  message: z.string().min(1),
+  createdAt: z.string().refine((s) => !Number.isNaN(Date.parse(s)), {
+    message: "Invalid date",
+  }),
+  read: z.boolean().default(false),
+});
+export type Notification = z.infer<typeof NotificationSchema>;

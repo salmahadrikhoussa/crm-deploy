@@ -14,21 +14,49 @@ interface Project {
   status: string;
 }
 
+interface Client {
+  id: string;
+  name: string;
+}
+
+interface User {
+  id: string;
+  name?: string;
+  email: string;
+}
+
 export default function ProjectsPage() {
   const [projects, setProjects] = useState<Project[]>([]);
+  const [clients, setClients] = useState<Client[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
 
   useEffect(() => {
-    fetch("/api/projects")
-      .then((res) => res.json())
-      .then((data: Project[]) => setProjects(data))
+    Promise.all([
+      fetch("/api/projects").then(res => res.json()),
+      fetch("/api/clients").then(res => res.json()),
+      fetch("/api/users").then(res => res.json()),
+    ])
+      .then(([projData, clientData, userData]) => {
+        setProjects(projData);
+        setClients(clientData);
+        setUsers(userData);
+      })
       .finally(() => setLoading(false));
   }, []);
 
   const handleNew = (newProj: ProjectInput & { id: string }) => {
-    setProjects((prev) => [...prev, newProj]);
+    setProjects(prev => [...prev, newProj]);
     setShowForm(false);
+  };
+
+  const getClientName = (id: string) =>
+    clients.find(c => c.id === id)?.name || id;
+
+  const getUserName = (id: string) => {
+    const user = users.find(u => u.id === id);
+    return user?.name || user?.email || id;
   };
 
   if (loading) return <p>Loading projects…</p>;
@@ -49,7 +77,7 @@ export default function ProjectsPage() {
         <table className="min-w-full bg-white rounded-lg shadow">
           <thead>
             <tr className="bg-gray-100 text-left">
-              {["Name", "Client ID", "Owner", "Start Date", "End Date", "Status", "Actions"].map((h) => (
+              {["Name", "Client", "Owner", "Start Date", "End Date", "Status", "Actions"].map(h => (
                 <th key={h} className="px-4 py-2">{h}</th>
               ))}
             </tr>
@@ -65,8 +93,8 @@ export default function ProjectsPage() {
                     {p.name}
                   </Link>
                 </td>
-                <td className="px-4 py-2">{p.clientId}</td>
-                <td className="px-4 py-2">{p.owner}</td>
+                <td className="px-4 py-2">{getClientName(p.clientId)}</td>
+                <td className="px-4 py-2">{getUserName(p.owner)}</td>
                 <td className="px-4 py-2">{new Date(p.startDate).toLocaleDateString()}</td>
                 <td className="px-4 py-2">{new Date(p.endDate).toLocaleDateString()}</td>
                 <td className="px-4 py-2">{p.status}</td>
