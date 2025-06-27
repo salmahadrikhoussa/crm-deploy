@@ -1,4 +1,3 @@
-// app/dashboard/projects/[id]/page.tsx
 "use client";
 
 import { useRouter, useParams } from "next/navigation";
@@ -15,23 +14,25 @@ interface Project {
 }
 
 export default function ProjectDetailPage() {
-  const { id } = useParams();
+  const { id } = useParams() as { id?: string };
   const router = useRouter();
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // load on mount
   useEffect(() => {
+    if (!id) return;
     fetch(`/api/projects/${id}`)
       .then((res) => res.json())
       .then((data) => setProject(data))
-      .catch(() => setError("Failed to load"))
+      .catch(() => setError("Failed to load project"))
       .finally(() => setLoading(false));
   }, [id]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     if (!project) return;
     const { name, value } = e.target;
     setProject({ ...project, [name]: value });
@@ -79,7 +80,9 @@ export default function ProjectDetailPage() {
         { label: "Owner (User ID)", name: "owner", type: "text" },
       ].map((field) => (
         <div key={field.name}>
-          <label className="block text-sm font-medium text-gray-700">{field.label}</label>
+          <label className="block text-sm font-medium text-gray-700">
+            {field.label}
+          </label>
           <input
             name={field.name}
             type={field.type}
@@ -93,22 +96,26 @@ export default function ProjectDetailPage() {
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700">Start Date</label>
+          <label className="block text-sm font-medium text-gray-700">
+            Start Date
+          </label>
           <input
             name="startDate"
             type="date"
-            value={project.startDate.substring(0, 10)}
+            value={project.startDate?.substring(0, 10)}
             onChange={handleChange}
             disabled={saving}
             className="mt-1 block w-full border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700">End Date</label>
+          <label className="block text-sm font-medium text-gray-700">
+            End Date
+          </label>
           <input
             name="endDate"
             type="date"
-            value={project.endDate.substring(0, 10)}
+            value={project.endDate?.substring(0, 10)}
             onChange={handleChange}
             disabled={saving}
             className="mt-1 block w-full border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500"
@@ -117,7 +124,9 @@ export default function ProjectDetailPage() {
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700">Status</label>
+        <label className="block text-sm font-medium text-gray-700">
+          Status
+        </label>
         <select
           name="status"
           value={project.status}
@@ -126,7 +135,9 @@ export default function ProjectDetailPage() {
           className="mt-1 block w-full border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500"
         >
           {["Active", "Completed", "On Hold", "Cancelled"].map((opt) => (
-            <option key={opt} value={opt}>{opt}</option>
+            <option key={opt} value={opt}>
+              {opt}
+            </option>
           ))}
         </select>
       </div>
