@@ -1,3 +1,4 @@
+// ✅ app/dashboard/projects/[id]/page.tsx
 "use client";
 
 import { useRouter, useParams } from "next/navigation";
@@ -14,25 +15,27 @@ interface Project {
 }
 
 export default function ProjectDetailPage() {
-  const { id } = useParams() as { id?: string };
+  const params = useParams<{ id: string }>();
+  const id = params.id;
   const router = useRouter();
+
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // 🔍 Chargement des données au montage
   useEffect(() => {
     if (!id) return;
+    console.log("ID from params:", id);
     fetch(`/api/projects/${id}`)
       .then((res) => res.json())
       .then((data) => setProject(data))
-      .catch(() => setError("Failed to load project"))
+      .catch(() => setError("Failed to load"))
       .finally(() => setLoading(false));
   }, [id]);
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     if (!project) return;
     const { name, value } = e.target;
     setProject({ ...project, [name]: value });
@@ -74,19 +77,19 @@ export default function ProjectDetailPage() {
       <h1 className="text-2xl font-bold">Edit Project</h1>
       {error && <p className="text-red-600">{error}</p>}
 
-      {[
-        { label: "Name", name: "name", type: "text" },
-        { label: "Client ID", name: "clientId", type: "text" },
-        { label: "Owner (User ID)", name: "owner", type: "text" },
-      ].map((field) => (
-        <div key={field.name}>
+      {["name", "clientId", "owner"].map((field) => (
+        <div key={field}>
           <label className="block text-sm font-medium text-gray-700">
-            {field.label}
+            {field === "clientId"
+              ? "Client ID"
+              : field === "owner"
+              ? "Owner (User ID)"
+              : "Name"}
           </label>
           <input
-            name={field.name}
-            type={field.type}
-            value={(project as any)[field.name]}
+            name={field}
+            type="text"
+            value={(project as any)[field] || ""}
             onChange={handleChange}
             disabled={saving}
             className="mt-1 block w-full border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500"
@@ -96,9 +99,7 @@ export default function ProjectDetailPage() {
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700">
-            Start Date
-          </label>
+          <label className="block text-sm font-medium text-gray-700">Start Date</label>
           <input
             name="startDate"
             type="date"
@@ -109,9 +110,7 @@ export default function ProjectDetailPage() {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700">
-            End Date
-          </label>
+          <label className="block text-sm font-medium text-gray-700">End Date</label>
           <input
             name="endDate"
             type="date"
@@ -124,9 +123,7 @@ export default function ProjectDetailPage() {
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700">
-          Status
-        </label>
+        <label className="block text-sm font-medium text-gray-700">Status</label>
         <select
           name="status"
           value={project.status}
@@ -135,9 +132,7 @@ export default function ProjectDetailPage() {
           className="mt-1 block w-full border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500"
         >
           {["Active", "Completed", "On Hold", "Cancelled"].map((opt) => (
-            <option key={opt} value={opt}>
-              {opt}
-            </option>
+            <option key={opt} value={opt}>{opt}</option>
           ))}
         </select>
       </div>
