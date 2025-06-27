@@ -1,8 +1,7 @@
-"use client";
-
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import NewProjectForm, { ProjectInput } from "../../components/NewProjectForm";
+import ProjectDetailsModal from "../../components/ProjectDetailsModal";
 
 interface Project {
   id: string;
@@ -31,6 +30,7 @@ export default function ProjectsPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   useEffect(() => {
     Promise.all([
@@ -51,13 +51,8 @@ export default function ProjectsPage() {
     setShowForm(false);
   };
 
-  const getClientName = (id: string) =>
-    clients.find(c => c.id === id)?.name || id;
-
-  const getUserName = (id: string) => {
-    const user = users.find(u => u.id === id);
-    return user?.name || user?.email || id;
-  };
+  const getClientName = (id: string) => clients.find(c => c.id === id)?.name || id;
+  const getUserName = (id: string) => users.find(u => u.id === id)?.name || id;
 
   if (loading) return <p>Loading projects…</p>;
 
@@ -85,26 +80,19 @@ export default function ProjectsPage() {
           <tbody>
             {projects.map((p) => (
               <tr key={p.id} className="border-t hover:bg-gray-50">
-                <td className="px-4 py-2">
-                  <Link
-                    href={`/dashboard/projects/${p.id}`}
-                    className="text-blue-600 hover:underline"
-                  >
-                    {p.name}
-                  </Link>
-                </td>
+                <td className="px-4 py-2">{p.name}</td>
                 <td className="px-4 py-2">{getClientName(p.clientId)}</td>
                 <td className="px-4 py-2">{getUserName(p.owner)}</td>
                 <td className="px-4 py-2">{new Date(p.startDate).toLocaleDateString()}</td>
                 <td className="px-4 py-2">{new Date(p.endDate).toLocaleDateString()}</td>
                 <td className="px-4 py-2">{p.status}</td>
                 <td className="px-4 py-2">
-                  <Link
-                    href={`/dashboard/projects/${p.id}`}
+                  <button
+                    onClick={() => setSelectedId(p.id)}
                     className="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300 text-sm"
                   >
                     Details
-                  </Link>
+                  </button>
                 </td>
               </tr>
             ))}
@@ -117,6 +105,10 @@ export default function ProjectsPage() {
           onSuccess={handleNew}
           onClose={() => setShowForm(false)}
         />
+      )}
+
+      {selectedId && (
+        <ProjectDetailsModal id={selectedId} onClose={() => setSelectedId(null)} />
       )}
     </div>
   );
