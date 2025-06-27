@@ -1,25 +1,27 @@
-import { ObjectId } from "mongodb";
 import { NextRequest, NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
-import { verifyJwt } from "@/lib/jwt";
+import { ObjectId } from "mongodb";
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
-  const token = req.cookies.get("token")?.value;
-  if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const { id } = params;
 
-  const payload = await verifyJwt(token);
-  if (!payload || !("id" in payload)) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!id) {
+    return NextResponse.json({ error: "Missing ID" }, { status: 400 });
   }
 
-  const notifId = params.id;
-  const client = await clientPromise;
-  const db = client.db();
+  try {
+    const updates = await req.json();
+    const client = await clientPromise;
+    const db = client.db("suzali_crm");
 
-  await db.collection("notifications").updateOne(
-    { _id: new ObjectId(notifId) },
-    { $set: { read: true } }
-  );
+    await db.collection("notifications").updateOne(
+      { _id: new ObjectId(id) },
+      { $set: updates }
+    );
 
-  return NextResponse.json({ success: true });
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    console.error("Error updating notification:", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
 }
