@@ -1,40 +1,41 @@
-// app/api/tasks/[id]/route.ts
+// app/api/clients/[id]/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
 import { ObjectId } from 'mongodb';
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  const id = params.id;
-  console.log("[API] GET /api/tasks/[id] → id =", id);
+export async function GET(req: NextRequest) {
+  // Extract the ID from the URL manually
+  const url = new URL(req.url);
+  const id = url.pathname.split('/').pop(); // e.g. "60f6a8d2c1e8b8a1d4e2c123"
 
-  // validate the id is a proper Mongo ObjectId
+  console.log('[API] GET /api/clients/[id] → id =', id);
+
+  if (!id) {
+    console.error('[API] No ID provided');
+    return NextResponse.json({ error: 'ID manquant' }, { status: 400 });
+  }
   if (!ObjectId.isValid(id)) {
-    console.error("[API] Invalid ObjectId:", id);
-    return NextResponse.json({ error: "ID invalide" }, { status: 400 });
+    console.error('[API] Invalid ObjectId:', id);
+    return NextResponse.json({ error: 'ID invalide' }, { status: 400 });
   }
 
   try {
     const client = await clientPromise;
-    const db = client.db('test');     // ← make sure this is your DB name
-    const task = await db
-      .collection('tasks')            // ← make sure this matches your collection
-      .findOne({ _id: new ObjectId(id) });
+    const db = client.db('suzali_crm'); // ← your database name
+    const doc = await db.collection('clients').findOne({ _id: new ObjectId(id) });
 
-    if (!task) {
-      console.warn(`[API] Tâche non trouvée pour _id=${id}`);
-      return NextResponse.json({ error: "Tâche non trouvée" }, { status: 404 });
+    if (!doc) {
+      console.warn(`[API] Client not found for _id=${id}`);
+      return NextResponse.json({ error: 'Client non trouvé' }, { status: 404 });
     }
 
-    // Serialize _id into a flat string "id"
-    const { _id, ...rest } = task;
+    // Serialize _id to a flat string "id"
+    const { _id, ...rest } = doc;
     const payload = { id: _id.toString(), ...rest };
-    console.log("[API] Returning task:", payload);
+    console.log('[API] Returning client:', payload);
     return NextResponse.json(payload);
   } catch (err) {
-    console.error("[API] Error in GET /api/tasks/[id]:", err);
-    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
+    console.error('[API] Error in GET /api/clients/[id]:', err);
+    return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 });
   }
 }
