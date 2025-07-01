@@ -3,16 +3,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
 import { ObjectId } from 'mongodb';
 
-export async function GET(req: NextRequest) {
-  const url = new URL(req.url);
-  const id = url.pathname.split("/").pop(); // ex: "685d5460171a12fd843d9de9"
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  const id = params.id;
   console.log("[API] GET /api/tasks/[id] → id =", id);
 
-  if (!id) {
-    console.error("[API] Missing id");
-    return NextResponse.json({ error: "ID manquant" }, { status: 400 });
-  }
-
+  // validate the id is a proper Mongo ObjectId
   if (!ObjectId.isValid(id)) {
     console.error("[API] Invalid ObjectId:", id);
     return NextResponse.json({ error: "ID invalide" }, { status: 400 });
@@ -20,16 +18,18 @@ export async function GET(req: NextRequest) {
 
   try {
     const client = await clientPromise;
-    const db = client.db('test');
-    const doc = await db.collection('tasks').findOne({ _id: new ObjectId(id) });
+    const db = client.db('test');     // ← make sure this is your DB name
+    const task = await db
+      .collection('tasks')            // ← make sure this matches your collection
+      .findOne({ _id: new ObjectId(id) });
 
-    if (!doc) {
-      console.warn(`[API] Task not found for _id=${id}`);
+    if (!task) {
+      console.warn(`[API] Tâche non trouvée pour _id=${id}`);
       return NextResponse.json({ error: "Tâche non trouvée" }, { status: 404 });
     }
 
-    // Destructure and serialize
-    const { _id, ...rest } = doc;
+    // Serialize _id into a flat string "id"
+    const { _id, ...rest } = task;
     const payload = { id: _id.toString(), ...rest };
     console.log("[API] Returning task:", payload);
     return NextResponse.json(payload);

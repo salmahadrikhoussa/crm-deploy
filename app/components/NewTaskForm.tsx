@@ -1,30 +1,14 @@
+// app/components/NewTaskForm.tsx
 "use client";
 
 import { useEffect, useState, FormEvent } from "react";
+import { Task, TaskInput } from "../types/task";
 
-export interface TaskInput {
-  projectId: string; // maintenant contient le nom du projet
-  title: string;
-  description: string;
-  assignedTo: string; // maintenant contient le nom de l'utilisateur
-  dueDate: string;
-  priority: string;
-  status: string;
-}
-
-interface Project {
-  id: string;
-  name?: string;
-}
-
-interface User {
-  id: string;
-  name?: string;
-  email: string;
-}
+interface Project { id: string; name?: string }
+interface User    { id: string; name?: string; email: string }
 
 interface NewTaskFormProps {
-  onSuccess: (task: TaskInput & { id: string }) => void;
+  onSuccess: (task: Task) => void;
   onClose: () => void;
 }
 
@@ -41,33 +25,22 @@ export default function NewTaskForm({ onSuccess, onClose }: NewTaskFormProps) {
   });
 
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError]     = useState<string | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
-  const [users, setUsers] = useState<User[]>([]);
+  const [users, setUsers]       = useState<User[]>([]);
 
   useEffect(() => {
     fetch("/api/projects")
-      .then((res) => res.json())
-      .then((data) =>
-        setProjects(
-          data.map((p: any) => ({
-            id: p.id,
-            name: p.name ?? p.id,
-          }))
-        )
+      .then(res => res.json())
+      .then((data: any[]) =>
+        setProjects(data.map(p => ({ id: p.id, name: p.name ?? p.id })))
       )
       .catch(console.error);
 
     fetch("/api/users")
-      .then((res) => res.json())
-      .then((data) =>
-        setUsers(
-          data.map((u: any) => ({
-            id: u.id,
-            name: u.name,
-            email: u.email,
-          }))
-        )
+      .then(res => res.json())
+      .then((data: any[]) =>
+        setUsers(data.map(u => ({ id: u.id, name: u.name, email: u.email })))
       )
       .catch(console.error);
   }, []);
@@ -76,7 +49,7 @@ export default function NewTaskForm({ onSuccess, onClose }: NewTaskFormProps) {
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
-    setForm((f) => ({ ...f, [name]: value }));
+    setForm(f => ({ ...f, [name]: value }));
   };
 
   const handleSubmit = async (e: FormEvent) => {
@@ -91,12 +64,12 @@ export default function NewTaskForm({ onSuccess, onClose }: NewTaskFormProps) {
         body: JSON.stringify(form),
       });
 
+      const payload = await res.json();
       if (!res.ok) {
-        const { error: msg } = await res.json().catch(() => ({}));
-        setError(msg || "Failed to create task");
+        setError(payload.error || "Failed to create task");
       } else {
-        const created = await res.json();
-        onSuccess(created);
+        // payload must be a full Task { id, …rest }
+        onSuccess(payload as Task);
         onClose();
       }
     } catch (err) {
@@ -128,7 +101,7 @@ export default function NewTaskForm({ onSuccess, onClose }: NewTaskFormProps) {
             className="mt-1 block w-full border border-gray-300 rounded-lg p-2"
           >
             <option value="">-- Select a project --</option>
-            {projects.map((p) => (
+            {projects.map(p => (
               <option key={p.id} value={p.name}>
                 {p.name}
               </option>
@@ -176,7 +149,7 @@ export default function NewTaskForm({ onSuccess, onClose }: NewTaskFormProps) {
             className="mt-1 block w-full border border-gray-300 rounded-lg p-2"
           >
             <option value="">-- Select a user --</option>
-            {users.map((u) => (
+            {users.map(u => (
               <option key={u.id} value={u.name || u.email}>
                 {u.name || u.email}
               </option>
@@ -184,7 +157,7 @@ export default function NewTaskForm({ onSuccess, onClose }: NewTaskFormProps) {
           </select>
         </div>
 
-        {/* Dates & Priority */}
+        {/* Due Date & Priority */}
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700">Due Date</label>
@@ -206,10 +179,8 @@ export default function NewTaskForm({ onSuccess, onClose }: NewTaskFormProps) {
               disabled={loading}
               className="mt-1 block w-full border border-gray-300 rounded-lg p-2"
             >
-              {["Low", "Normal", "High", "Urgent"].map((opt) => (
-                <option key={opt} value={opt}>
-                  {opt}
-                </option>
+              {["Low","Normal","High","Urgent"].map(opt => (
+                <option key={opt} value={opt}>{opt}</option>
               ))}
             </select>
           </div>
@@ -225,22 +196,17 @@ export default function NewTaskForm({ onSuccess, onClose }: NewTaskFormProps) {
             disabled={loading}
             className="mt-1 block w-full border border-gray-300 rounded-lg p-2"
           >
-            {["Open", "In Progress", "Completed", "Blocked"].map((opt) => (
-              <option key={opt} value={opt}>
-                {opt}
-              </option>
+            {["Open","In Progress","Completed","Blocked"].map(opt => (
+              <option key={opt} value={opt}>{opt}</option>
             ))}
           </select>
         </div>
 
-        {/* Buttons */}
+        {/* Actions */}
         <div className="flex justify-end space-x-2 pt-4">
           <button
             type="button"
-            onClick={() => {
-              setLoading(false);
-              onClose();
-            }}
+            onClick={() => loading ? null : onClose()}
             disabled={loading}
             className="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300"
           >

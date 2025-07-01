@@ -1,73 +1,53 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 
-function getIdFromRequest(req: NextRequest): string | null {
-  const url = new URL(req.url);
-  const segments = url.pathname.split("/");
-  return segments[segments.length - 1] || null;
-}
+export async function GET(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
+  const id = params.id;
 
-export async function GET(req: NextRequest) {
-  const id = getIdFromRequest(req);
-  if (!id) {
-    return NextResponse.json({ error: "Missing ID" }, { status: 400 });
+  if (!ObjectId.isValid(id)) {
+    return NextResponse.json({ error: "Invalid ID format" }, { status: 400 });
   }
 
-  try {
-    const client = await clientPromise;
-    const db = client.db("suzali_crm");
-    const projectData = await db.collection("projects").findOne({ _id: new ObjectId(id) });
+  const client = await clientPromise;
 
-    if (!projectData) {
-      return NextResponse.json({ error: "Project not found" }, { status: 404 });
-    }
+  // 🎯 Connexion aux deux bases
+  const projectDB = client.db("test");            // pour projects
+  const clientDB = client.db("suzali_crm");       // pour clients
+  // 🔍 1. Récupérer le projet
+  const project = await projectDB
+    .collection("projects")
+    .findOne({ _id: new ObjectId(id) });
 
-    return NextResponse.json(projectData);
-  } catch (error) {
-    console.error("Error fetching project:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
-  }
-}
-
-export async function PATCH(req: NextRequest) {
-  const id = getIdFromRequest(req);
-  if (!id) {
-    return NextResponse.json({ error: "Missing ID" }, { status: 400 });
+  if (!project) {
+    return NextResponse.json({ error: "Project not found" }, { status: 404 });
   }
 
-  try {
-    const updates = await req.json();
-    const client = await clientPromise;
-    const db = client.db("suzali_crm");
-
-    await db.collection("projects").updateOne(
-      { _id: new ObjectId(id) },
-      { $set: updates }
-    );
-
-    return NextResponse.json({ ok: true });
-  } catch (error) {
-    console.error("Error updating project:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
-  }
-}
-
-export async function DELETE(req: NextRequest) {
-  const id = getIdFromRequest(req);
-  if (!id) {
-    return NextResponse.json({ error: "Missing ID" }, { status: 400 });
+  // 🔄 2. Chercher le client depuis l’AUTRE base
+  let clientData = null;
+  if (project.clientId && ObjectId.isValid(project.clientId)) {
+    clientData = await clientDB
+      .collection("clients")
+      .findOne({ _id: new ObjectId(project.clientId) });
   }
 
-  try {
-    const client = await clientPromise;
-    const db = client.db("suzali_crm");
-
-    await db.collection("projects").deleteOne({ _id: new ObjectId(id) });
-
-    return NextResponse.json({ ok: true });
-  } catch (error) {
-    console.error("Error deleting project:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  // 🔄 3. Chercher le user (dans test)
+  let ownerData = null;
+  if (project.owner && ObjectId.isValid(project.owner)) {
+    ownerData = await clientDB
+      .collection("users")
+      .findOne({ _id: new ObjectId(project.owner) });
   }
+
+  // 🔁 4. Ajouter les noms
+  const enrichedProject = {
+    ...project,
+    clientName: clientData?.name || "Client inconnu",
+    ownerName: ownerData?.name || "Utilisateur inconnu",
+  };
+
+  return NextResponse.json(enrichedProject);
 }
