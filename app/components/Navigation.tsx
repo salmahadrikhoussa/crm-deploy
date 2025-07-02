@@ -28,31 +28,35 @@ export default function Navigation() {
     { href: "/dashboard/tasks", label: "Tasks", roles: ["admin", "bizdev", "developer"] },
     { href: "/dashboard/projects", label: "Projects", roles: ["admin", "bizdev", "developer"] },
     { href: "/dashboard/users", label: "Users", roles: ["admin"] },
+    { href: "/dashboard/frais", label: "Frais" }, // ✅ No more role restriction
+
   ];
 
   if (!role) return null;
 
   return (
-    <nav className="flex items-center justify-between px-4 py-2 bg-white shadow">
-      <ul className="flex space-x-4">
-        {links
-          .filter((link) => link.roles.includes(role))
-          .map((link) => (
-            <li key={link.href}>
-              <Link href={link.href}>{link.label}</Link>
-            </li>
-          ))}
-        <li>
-          <Link href="/dashboard/notifications" className="relative">
-            <Bell className="w-5 h-5 text-gray-700" />
-            {unreadCount > 0 && (
-              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full px-1">
-                {unreadCount}
-              </span>
-            )}
+    <nav className="px-4 py-2 bg-white shadow h-full">
+  <ul className="flex flex-col space-y-2">
+    {links
+      .filter((link) => !link.roles || link.roles.includes(role))
+      .map((link) => (
+        <li key={link.href}>
+          <Link href={link.href} className="block hover:text-blue-600">
+            {link.label}
           </Link>
         </li>
-      </ul>
-    </nav>
+      ))}
+    <li>
+      <Link href="/dashboard/notifications" className="relative">
+        <Bell className="w-5 h-5 text-gray-700" />
+        {unreadCount > 0 && (
+          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full px-1">
+            {unreadCount}
+          </span>
+        )}
+      </Link>
+    </li>
+  </ul>
+</nav>
   );
 }

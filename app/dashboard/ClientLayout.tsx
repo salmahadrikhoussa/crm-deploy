@@ -11,9 +11,14 @@ const navItems = [
   { label: "Projects", href: "/dashboard/projects" },
   { label: "Tasks", href: "/dashboard/tasks" },
   { label: "Users", href: "/dashboard/users" },
+
+  // 🔽 Finance section
+  { label: "Finance - Dashboard", href: "/dashboard/finance" },
+  { label: "Finance - Dépenses", href: "/dashboard/finance/depenses" },
+  { label: "Finance - Entrée d'argent", href: "/dashboard/finance/entree" },
+
   { label: "Profile", href: "/dashboard/profile" },
 ];
-
 interface User {
   id: string;
   name?: string;
