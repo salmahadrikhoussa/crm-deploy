@@ -5,7 +5,7 @@ const uri = process.env.MONGODB_URI!;
 const client = new MongoClient(uri);
 const dbName = 'test';
 
-export async function GET(req: NextRequest) {
+export async function PUT(req: NextRequest) {
   const id = req.nextUrl.pathname.split('/').pop();
 
   if (!id) {
@@ -13,18 +13,23 @@ export async function GET(req: NextRequest) {
   }
 
   try {
+    const updates = await req.json();
+
     await client.connect();
     const db = client.db(dbName);
-    const collection = db.collection('clients');
+    const fraisCollection = db.collection('frais');
 
-    const clientData = await collection.findOne({ _id: new ObjectId(id) });
+    const result = await fraisCollection.updateOne(
+      { _id: new ObjectId(id) },
+      { $set: updates }
+    );
 
-    if (!clientData) {
-      return NextResponse.json({ error: 'Client not found' }, { status: 404 });
+    if (result.modifiedCount === 0) {
+      return NextResponse.json({ error: 'Frais not found or unchanged' }, { status: 404 });
     }
 
-    return NextResponse.json(clientData);
+    return NextResponse.json({ success: true });
   } catch (err) {
-    return NextResponse.json({ error: 'Server error' }, { status: 500 });
+    return NextResponse.json({ error: 'Update failed' }, { status: 500 });
   }
 }
