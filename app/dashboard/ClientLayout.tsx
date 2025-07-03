@@ -13,6 +13,7 @@ const navItems = [
   { label: "Tasks", href: "/dashboard/tasks" },
   { label: "Users", href: "/dashboard/users" },
   { label: "Profile", href: "/dashboard/profile" },
+  { label: "Emails", href: "/dashboard/email" },
 ];
 
 const financeSubItems = [
