@@ -1,38 +1,36 @@
 import { NextRequest, NextResponse } from "next/server";
-import { MongoClient, ObjectId, Document } from "mongodb";
+import { MongoClient, ObjectId } from "mongodb";
 
 const uri = process.env.MONGODB_URI!;
 const client = new MongoClient(uri);
-const dbName = "test"; // replace if different
+const dbName = "test"; // Or your actual DB name
 
-export async function PUT(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function PUT(req: NextRequest) {
+  const id = req.nextUrl.pathname.split("/").pop();
+
+  if (!id) {
+    return NextResponse.json({ error: "Missing ID" }, { status: 400 });
+  }
+
   try {
-    const { id } = params;
-    const { status } = await req.json();
-
-    if (!["approuve", "refuse"].includes(status)) {
-      return NextResponse.json({ error: "Invalid status" }, { status: 400 });
-    }
+    const updates = await req.json();
 
     await client.connect();
-    const fraisCollection = client.db(dbName).collection("frais");
+    const db = client.db(dbName);
+    const fraisCollection = db.collection("frais");
 
-    const result = await fraisCollection.findOneAndUpdate(
+    const result = await fraisCollection.updateOne(
       { _id: new ObjectId(id) },
-      { $set: { status } },
-      { returnDocument: "after" }
+      { $set: updates }
     );
 
-    if (!result || !result.value) {
-      return NextResponse.json({ error: "Frais not found" }, { status: 404 });
+    if (result.modifiedCount === 0) {
+      return NextResponse.json({ error: "Frais not found or unchanged" }, { status: 404 });
     }
 
-    return NextResponse.json(result.value);
-  } catch (error) {
-    console.error(error);
-    return NextResponse.json({ error: "Failed to update status" }, { status: 500 });
+    return NextResponse.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    return NextResponse.json({ error: "Update failed" }, { status: 500 });
   }
 }
