@@ -51,7 +51,7 @@ export default function AddFraisModal({ isOpen, onClose, onAdded }: AddFraisModa
       onAdded({ ...frais, _id: insertedId });
       onClose();
     } else {
-      alert('Erreur lors de l’envoi.');
+      alert('Erreur lors de l\u2019envoi.');
     }
 
     setSubmitting(false);

@@ -55,7 +55,7 @@ export default function EntreesPage() {
 
   return (
     <div className="space-y-6 p-6">
-      <h1 className="text-xl font-bold">Liste des entrées d'argent</h1>
+      <h1 className="text-xl font-bold">Liste des Entrées d&apos;argent</h1>
       <ul className="space-y-2">
         {entrees.map((entree, i) => (
           <li key={i} className="flex justify-between border-b pb-2">

@@ -52,7 +52,7 @@ export default function AddEntreeModal({ isOpen, onClose, onAdded }: AddEntreeMo
     <>
       <div className="fixed inset-y-0 right-0 z-[9999] w-full max-w-md bg-white shadow-xl p-6 overflow-y-auto">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-semibold">Ajouter une entrée d'argent</h2>
+          <h2 className="text-lg font-semibold">Ajouter une entrée d&apos;argent</h2>
           <button onClick={onClose} className="text-gray-500 hover:text-black text-xl">&times;</button>
         </div>
 
