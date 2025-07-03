@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Entree } from '@/types/entree';
+import { Entree } from '../../../types/entree';
 import AddEntreeModal from '@/app/components/AddEntreeModal';
 import EntreeDetailsModal from '@/app/components/EntreeDetailsModal';
 

@@ -38,7 +38,7 @@ export default function AddEntreeModal({ onClose, onAdded }: AddEntreeModalProps
       const { insertedId } = await res.json();
       onAdded({ ...entree, _id: insertedId });
     } else {
-      alert('Erreur lors de l’envoi.');
+        alert('Erreur lors de l\u2019envoi.');
     }
 
     setSubmitting(false);

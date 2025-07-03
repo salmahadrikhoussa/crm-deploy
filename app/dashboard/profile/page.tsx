@@ -1,4 +1,7 @@
+/* eslint-disable react/no-unescaped-entities */
+
 // app/dashboard/profile/page.tsx
+
 "use client";
 
 import { useEffect, useState, FormEvent } from "react";
