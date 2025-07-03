@@ -1,6 +1,4 @@
 /* eslint-disable react/no-unescaped-entities */
-
-
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
@@ -14,14 +12,15 @@ const navItems = [
   { label: "Projects", href: "/dashboard/projects" },
   { label: "Tasks", href: "/dashboard/tasks" },
   { label: "Users", href: "/dashboard/users" },
-
-  // 🔽 Finance section
-  { label: "Finance - Dashboard", href: "/dashboard/finance" },
-  { label: "Finance - Dépenses", href: "/dashboard/finance/depenses" },
-  { label: "Finance - Entrée d'argent", href: "/dashboard/finance/entree" },
-
   { label: "Profile", href: "/dashboard/profile" },
 ];
+
+const financeSubItems = [
+  { label: "Dashboard", href: "/dashboard/finance" },
+  { label: "Dépenses", href: "/dashboard/finance/depenses" },
+  { label: "Entrée d'argent", href: "/dashboard/finance/entree" },
+];
+
 interface User {
   id: string;
   name?: string;
@@ -34,9 +33,9 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
 
   const [user, setUser] = useState<User | null>(null);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [financeOpen, setFinanceOpen] = useState(path.startsWith("/dashboard/finance"));
   const badgeRef = useRef<HTMLDivElement>(null);
 
-  // Fetch current user info
   useEffect(() => {
     fetch("/api/auth/me")
       .then(res => res.json())
@@ -44,7 +43,6 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
       .catch(() => setUser(null));
   }, []);
 
-  // Close dropdown on outside click
   useEffect(() => {
     function onClick(e: MouseEvent) {
       if (badgeRef.current && !badgeRef.current.contains(e.target as Node)) {
@@ -55,10 +53,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
     return () => window.removeEventListener("mousedown", onClick);
   }, []);
 
-  const rawInitial =
-    user?.name?.trim().charAt(0) ||
-    user?.email?.trim().charAt(0) ||
-    "U";
+  const rawInitial = user?.name?.trim().charAt(0) || user?.email?.trim().charAt(0) || "U";
   const initial = rawInitial.toUpperCase();
 
   async function handleLogout() {
@@ -90,15 +85,41 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
                   key={item.href}
                   href={item.href}
                   className={`block px-4 py-2 rounded-lg font-medium transition ${
-                    isActive
-                      ? "bg-blue-600 text-white"
-                      : "text-gray-700 hover:bg-gray-100"
+                    isActive ? "bg-blue-600 text-white" : "text-gray-700 hover:bg-gray-100"
                   }`}
                 >
                   {item.label}
                 </Link>
               );
             })}
+
+            {/* Finance Group */}
+            <div>
+              <button
+                onClick={() => setFinanceOpen(prev => !prev)}
+                className="w-full text-left px-4 py-2 rounded-lg font-medium text-gray-700 hover:bg-gray-100"
+              >
+                Finance {financeOpen ? "▲" : "▼"}
+              </button>
+              {financeOpen && (
+                <div className="ml-4 mt-1 space-y-1">
+                  {financeSubItems.map(sub => {
+                    const isActive = path === sub.href;
+                    return (
+                      <Link
+                        key={sub.href}
+                        href={sub.href}
+                        className={`block px-3 py-1 rounded-lg text-sm font-medium transition ${
+                          isActive ? "bg-blue-600 text-white" : "text-gray-700 hover:bg-gray-100"
+                        }`}
+                      >
+                        {sub.label}
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           </nav>
         </div>
 
@@ -112,9 +133,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
               {initial}
             </div>
             <div className="text-left">
-              <p className="text-sm font-medium">
-                {user?.name || user?.email || "User"}
-              </p>
+              <p className="text-sm font-medium">{user?.name || user?.email || "User"}</p>
               <p className="text-xs text-gray-500">{user?.email}</p>
             </div>
           </button>
