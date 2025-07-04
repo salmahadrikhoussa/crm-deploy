@@ -71,9 +71,9 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="bg-gray-50 min-h-screen">
       {/* Sidebar */}
-      <aside className="w-64 bg-white border-r border-gray-200 p-6 flex flex-col justify-between">
+      <aside className="fixed top-0 left-0 h-full w-64 bg-white border-r border-gray-200 p-6 flex flex-col justify-between z-30">
         <div>
           <div className="mb-8">
             <img src="/logo.png" alt="Suzalink" className="h-8" />
@@ -159,8 +159,8 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 p-8">
-        <div className="bg-white rounded-2xl p-6 shadow">{children}</div>
+      <main className="ml-64">
+        <div className="mx-auto w-full max-w-screen-xl bg-white rounded-2xl shadow">{children}</div>
       </main>
     </div>
   );

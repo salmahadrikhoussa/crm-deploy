@@ -1,21 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getUserEmailCredentials } from '@/lib/getUserEmailCredentials';
-import { ObjectId } from 'mongodb';
 import clientPromise from '@/lib/mongodb';
+import { ObjectId } from 'mongodb';
+import { verifyJwt } from '@/lib/jwt';
 import Imap from 'imap';
 import { simpleParser } from 'mailparser';
 
-declare module 'imap';
+type EmailSummary = {
+  from: string;
+  subject: string;
+  date: Date;
+  bodyPreview: string;
+};
 
-async function fetchEmails(userId: string) {
-  const creds = await getUserEmailCredentials(userId);
-  return new Promise<any[]>((resolve, reject) => {
+// Titan IMAP settings
+const IMAP_HOST = "imap.titan.email";
+const IMAP_PORT = 993;
+const IMAP_SECURE = true;
+
+async function fetchEmails(email: string, password: string): Promise<EmailSummary[]> {
+  return new Promise((resolve, reject) => {
     const imap = new Imap({
-      user: creds.email,
-      password: creds.password,
-      host: 'imap.titan.email',
-      port: 993,
-      tls: true,
+      user: email,
+      password,
+      host: IMAP_HOST,
+      port: IMAP_PORT,
+      tls: IMAP_SECURE,
     });
     function openInbox(cb: any) {
       imap.openBox('INBOX', true, cb);
@@ -27,10 +36,8 @@ async function fetchEmails(userId: string) {
           bodies: '',
           struct: true,
         });
-        const emails: any[] = [];
+        const emails: EmailSummary[] = [];
         fetch.on('message', function (msg: any) {
-          let attributes: any;
-          let body = '';
           msg.on('body', function (stream: any) {
             let buffer = '';
             stream.on('data', function (chunk: any) {
@@ -39,15 +46,12 @@ async function fetchEmails(userId: string) {
             stream.on('end', async function () {
               const parsed = await simpleParser(buffer);
               emails.push({
-                from: parsed.from?.text,
-                subject: parsed.subject,
-                date: parsed.date,
+                from: parsed.from?.text || '',
+                subject: parsed.subject || '',
+                date: parsed.date || new Date(),
                 bodyPreview: parsed.text?.slice(0, 200) || '',
               });
             });
-          });
-          msg.once('attributes', function (attrs: any) {
-            attributes = attrs;
           });
         });
         fetch.once('end', function () {
@@ -67,10 +71,16 @@ export async function GET(req: NextRequest) {
   try {
     const token = req.cookies.get('token')?.value;
     if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    const payload = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
-    const userId = typeof payload.sub === 'string' ? payload.sub : null;
+    const payload = await verifyJwt(token);
+    const userId = typeof payload?.sub === 'string' ? payload.sub : null;
     if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    const emails = await fetchEmails(userId);
+    const client = await clientPromise;
+    const db = client.db('suzali_crm');
+    const user = await db.collection('users').findOne({ _id: new ObjectId(userId) });
+    if (!user || !user.titanEmail || !user.titanPassword) {
+      return NextResponse.json({ error: 'No Titan credentials found' }, { status: 400 });
+    }
+    const emails = await fetchEmails(user.titanEmail, user.titanPassword);
     return NextResponse.json({ emails });
   } catch (err) {
     return NextResponse.json({ error: 'Failed to fetch emails', details: String(err) }, { status: 500 });

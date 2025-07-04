@@ -22,7 +22,7 @@ export default function TitanCredentialsModal({ isOpen, onClose, initialEmail }:
     setError(null);
     setLoading(true);
     try {
-      const res = await fetch("/api/email/login", {
+      const res = await fetch("/api/email/login-titan", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
@@ -52,7 +52,7 @@ export default function TitanCredentialsModal({ isOpen, onClose, initialEmail }:
         aria-labelledby="titan-credentials-modal-title"
       >
         <div className="flex justify-between items-center mb-4">
-          <h2 id="titan-credentials-modal-title" className="text-lg font-semibold">Titan Mail Credentials</h2>
+          <h2 id="titan-credentials-modal-title" className="text-lg font-semibold">Titan Email Credentials</h2>
           <button
             onClick={onClose}
             className="text-gray-500 hover:text-black text-xl"
